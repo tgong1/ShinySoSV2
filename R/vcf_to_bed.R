@@ -7,15 +7,17 @@
 #' @export
 vcf_to_bed <- function(vcf_file){
   vcf <- VariantAnnotation::readVcf(vcf_file)
-  info = VariantAnnotation::info(vcf)
-  gr <- rowRanges(vcf)
 
-  for(field in c("SVTYPE", "SVLEN", "END","MATEID","STRANDS","CT","INV5","INV3")){
+  fixed_df <- vcf@fixed
+  gr <- vcf@rowRanges
+  info <- vcf@info
+
+  for(field in c("SVLEN","END", "STRANDS","CT","INV5","INV3","MATEID")){
     tmp <- eval(parse(text=paste0("info$", field)))
-    idx <- !(sapply(tmp, length))
-    if (isEmpty(idx)){
+    if (length(tmp) == 0){
       assign(paste0("INFO_", field), NA)
     }else{
+      idx <- !(sapply(tmp, length))
       tmp[idx] <- NA
       if(field == "STRANDS"){
         assign(paste0("INFO_", field), sapply(tmp, paste, collapse = ","))
@@ -25,26 +27,23 @@ vcf_to_bed <- function(vcf_file){
     }
   }
 
-  bed <- data.frame(CHROM = seqnames(gr),
-                    POS = start(gr),
+  bed <- data.frame(CHROM = gr@seqnames,
+                    POS = gr@ranges@start,
+                    ID_caller = gr@ranges@NAMES,
+                    REF = as.character(fixed_df$REF),
+                    ALT = data.frame(fixed_df$ALT)$value,
+                    QUAL = fixed_df$QUAL,
+                    FILTER = fixed_df$FILTER,
                     INFO_END,
-                    INFO_SVTYPE,
+                    INFO_SVTYPE = info$SVTYPE,
                     INFO_SVLEN,
                     INFO_STRANDS,
-                    INFO_CT,
-                    #INFO_INV5 = ifelse(INFO_INV5,"INV5",NA),
-                    #INFO_INV3 = ifelse(INFO_INV3,"INV3",NA),
+                    INFO_CT = INFO_CT,
                     INFO_INV5 = INFO_INV5,
                     INFO_INV3 = INFO_INV3,
-                    REF = gr$REF,
-                    ALT = unlist(gr$ALT),
-
-                    ID_caller = names(gr),
-                    QUAL = gr$QUAL,
-                    FILTER = gr$FILTER,
                     INFO_MATEID_caller = INFO_MATEID,
-                    # EVENT=info$EVENT,
-                    stringsAsFactors = FALSE)
+                    stringsAsFactors = FALSE
+  )
 
   return(bed)
 }
