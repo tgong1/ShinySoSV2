@@ -1,3 +1,10 @@
+#' Convert bed format to bedpe format
+#'
+#' This function read bed format
+#'
+#' @param bed dataframe
+#' @return data frame
+#' @export
 bed_to_bedpe <- function(bed){
   if(sum(!is.na(bed$INFO_STRANDS))!=0){
     tmp <- data.frame(str_split_fixed(bed$INFO_STRANDS,",",2), bed$ID_caller)
