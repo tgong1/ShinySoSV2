@@ -58,7 +58,7 @@ vcf_to_bed <- function(vcf_file){
 #' @export
 simple_SVTYPE_classification <- function(bed, caller_name){
   bedpe <- bed_to_bedpe(bed)
-  if(!isEmpty(bedpe$ID)){
+  if(length(bedpe$ID_caller)!=0){
     bedpe <- bedpe[is.na(match(bedpe$ID_caller, bedpe$INFO_MATEID_caller)) | ### either don't have mate (i.e. not BND)
                      (c(1:nrow(bedpe)) < match(bedpe$ID_caller, bedpe$INFO_MATEID_caller)),] ###  or present first as BND
   }
