@@ -7,13 +7,13 @@
 ShinySoSV_prediction(Candidate_callers, newdata, performance, callset)
 }
 \arguments{
-\item{Candidate_callers}{names of callers}
-
 \item{newdata}{data frame of variables with which to predict}
 
-\item{performance}{should be one of "sensitivity", "precision" or "F1 score"}
+\item{performance}{should be any of "sensitivity", "precision" or "F1 score"}
 
-\item{callset}{individual caller or pairwise union or intersection}
+\item{callset}{individual caller, pairwise union or intersection}
+
+\item{candidate_callers}{names of callers}
 }
 \value{
 data frame of predicted performance

@@ -2,21 +2,21 @@
 #'
 #' Performance prediction of SV calling
 #'
-#' @param Candidate_callers names of callers
+#' @param candidate_callers names of callers
 #' @param newdata data frame of variables with which to predict
-#' @param performance should be one of "sensitivity", "precision" or "F1 score"
-#' @param callset individual caller or pairwise union or intersection 
+#' @param performance should be any of "sensitivity", "precision" or "F1 score"
+#' @param callset individual caller, pairwise union or intersection
 #' @return data frame of predicted performance
 #' @export
 ShinySoSV_prediction <- function(Candidate_callers, newdata, performance, callset){
   model_name1 <- paste0(c("sen", "pre_off", "F1_score")[c("sensitivity", "precision", "F1_score") %in% performance])
   model_name2 <- paste0(c("", "_UnionIntersect", "_UnionIntersect")[c("individual", "union", "intersection") %in% callset])
-  
+
   model_name <- apply(expand.grid(model_name1, model_name2), 1, paste, collapse="")
   for(i in c(1:length(model_name))){
     load(paste0("./Shiny-SoSV/data/","gam",model_name[i],"_callers.RData"))
   }
-  
+
   combine_SV_SVcaller <- c()
   for(i in c(1:length(callset))){
     if(callset[i] %in% c("union","intersection")){
@@ -27,7 +27,7 @@ ShinySoSV_prediction <- function(Candidate_callers, newdata, performance, callse
       combine_SV_SVcaller <- c(combine_SV_SVcaller, candidate_callers)
     }
   }
-  
+
   df_prediction <- c()
   for(i in c(1: length(combine_SV_SVcaller))){
     for(j in c(1: length(model_name1))){
@@ -39,6 +39,6 @@ ShinySoSV_prediction <- function(Candidate_callers, newdata, performance, callse
   }
   df_prediction <- cbind(newdata, df_prediction)
   write.csv(df_prediction,file = "./Shiny-SoSV_prediction.csv",row.names = FALSE)
-  
+
   return(df_prediction)
 }
