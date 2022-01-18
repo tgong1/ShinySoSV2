@@ -93,3 +93,37 @@ simple_SVTYPE_classification <- function(bed, caller_name){
                                          colnames(bedpe)[!(colnames(bedpe) %in% c("chrom1","chrom2","pos1","pos2","strand1","strand2"))])
   return(bedpe_SVTYPE_classified)
 }
+#' Integrate SV call sets and write output
+#'
+#' This function read bed format
+#'
+#' @param sampleID sample ID
+#' @param SVCaller_name name of callers
+#' @param SVCaller_bed_name names of call sets
+#' @param bkpt_T_callers threshold of breakpoint difference
+#' @param SVTYPE_ignore whether ignore SV type for integration
+#' @param bedtools_dir directory of bedtools
+#' @return data frame
+#' @export
+SV_integration <- function(sampleID, SVCaller_name, SVCaller_bed_name,bkpt_T_callers,SVTYPE_ignore, bedtools_dir){
+  BND_diff <- 2000
+  directory <- "./"
+  sub_directory <- paste0("./", paste0(SVCaller_name,collapse = ""))
+  dir.create(sub_directory)
+  SVTYPE_ignore_text <- ifelse(SVTYPE_ignore, "SVTYPE_ignore", "SVTYPE_same")
+  SVCaller_bed_union <- SVCaller_union_intersect_generate(sampleID, SVCaller_name, SVCaller_bed_name, BND_diff, bkpt_T_callers, SVTYPE_ignore, bedtools_dir)
+
+  write.table(SVCaller_bed_union,
+              file = paste0(directory,"/",sub_directory,"/",
+                            sampleID, "_", paste0(SVCaller_name,collapse = "_"),
+                            "_combine_all_",bkpt_T_callers,"bp","_",SVTYPE_ignore_text,".bed"),
+              row.names = FALSE,col.names = TRUE, quote = FALSE, sep = "\t")
+  #head(SVCaller_bed_union)
+  #SVCaller_bed_intersection <- SVCaller_bed_union[(!is.na(SVCaller_bed_union$ID_overlap_Caller)),]
+  #write.table(SVCaller_bed_intersection,
+  #            file = paste0(directory,"/",sub_directory,"/",
+  #                          sampleID, "_", paste0(SVCaller_name,collapse = "_"),
+  #                         "_combine_intersection_",bkpt_T_callers,"bp","_",SVTYPE_ignore_text,".bed"),
+  #            row.names = FALSE,col.names = TRUE, quote = FALSE, sep = "\t")
+  return(SVCaller_bed_union)
+}
