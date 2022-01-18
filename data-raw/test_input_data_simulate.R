@@ -20,3 +20,26 @@ bed_test <- data.frame(CHROM = bed$CHROM,
                        POS = bed$POS,
                        ALT = bed$ALT)
 usethis::use_data(bed_test,overwrite = TRUE)
+
+
+
+vcf_file <- system.file("extdata",
+                        "lumpy_SVEngine_TumorSV2.60x_NormalSV1.60x_0.5_TumorminSU4.vcf",
+                        package = "ShinySoSV2")
+CallerA_bed <- simple_SVTYPE_classification(bed = vcf_to_bed(vcf_file), "CallerA")
+usethis::use_data(CallerA_bed,overwrite = TRUE)
+
+vcf_file <- system.file("extdata",
+                        "manta_SVEngine_TumorSV2.60x_NormalSV1.60x_0.5.T.PASS.recode.vcf",
+                        package = "ShinySoSV2")
+CallerB_bed <- simple_SVTYPE_classification(bed = vcf_to_bed(vcf_file), "CallerB")
+usethis::use_data(CallerB_bed,overwrite = TRUE)
+
+vcf_file <- system.file("extdata",
+                        "GRIDSS_SVEngine_TumorSV2.60x_NormalSV1.60x_0.5_somatic_PASS_annotated.vcf",
+                        package = "ShinySoSV2")
+CallerC_bed <- simple_SVTYPE_classification(bed = vcf_to_bed(vcf_file), "CallerC")
+usethis::use_data(CallerC_bed,overwrite = TRUE)
+
+
+
