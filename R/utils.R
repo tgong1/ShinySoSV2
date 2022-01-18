@@ -7,7 +7,7 @@
 #' @export
 bed_to_bedpe <- function(bed){
   if(sum(!is.na(bed$INFO_STRANDS))!=0){
-    tmp <- data.frame(str_split_fixed(bed$INFO_STRANDS,",",2), bed$ID_caller)
+    tmp <- data.frame(stringr::str_split_fixed(bed$INFO_STRANDS,",",2), bed$ID_caller)
     tmp$X1 <- gsub(":.*","", tmp$X1)
     tmp$X2 <- gsub(":.*","", tmp$X2)
     idx <- rep(1:nrow(tmp), rowSums(tmp[,c(1,2)]!=""))
@@ -15,7 +15,7 @@ bed_to_bedpe <- function(bed){
 
     tmp2[duplicated(tmp2$bed.ID_caller),]$X1 <- tmp2[duplicated(tmp2$bed.ID_caller),]$X2
     tmp3 <- tmp2[,-2]
-    tmp3 <- cbind(tmp3,str_split_fixed(tmp3$X1,"",2))
+    tmp3 <- cbind(tmp3, stringr::str_split_fixed(tmp3$X1,"",2))
     colnames(tmp3) <- c("strands","ID_caller","strand1","strand2")
     strand1 <- tmp3$strand1
     strand2 <- tmp3$strand2
