@@ -64,63 +64,32 @@ simple_SVTYPE_classification <- function(bed, caller_name){
   }
 
   SV_index <- c(1:nrow(bedpe))
-  #ID_tmp <- bedpe$EVENT
-  #ID_tmp[is.na(bedpe$EVENT)] <- SV_index[is.na(bedpe$EVENT)]
-  #event_index <- match(ID_tmp,unique(ID_tmp))
   event_index <- SV_index
 
-  strand1 <- rep(NA,nrow(bedpe))
-  strand2 <- rep(NA,nrow(bedpe))
-
-  strand1[bedpe$INFO_SVTYPE == "DEL"] <- "+"
-  strand2[bedpe$INFO_SVTYPE == "DEL"] <- "-"
-  strand1[bedpe$INFO_SVTYPE == "DUP"] <- "-"
-  strand2[bedpe$INFO_SVTYPE == "DUP"] <- "+"
-
-  ###[p[t
-  strand1[grepl('\\[', bedpe$ALT) & substr(bedpe$ALT,1,1) == "["] <- "-"
-  strand2[grepl('\\[', bedpe$ALT) & substr(bedpe$ALT,1,1) == "["] <- "-"
-
-  ###t[p[
-  strand1[grepl('\\[', bedpe$ALT) & substr(bedpe$ALT,1,1) != "["] <- "+"
-  strand2[grepl('\\[', bedpe$ALT) & substr(bedpe$ALT,1,1) != "["] <- "-"
-
-  ###t]p]
-  strand1[grepl(']', bedpe$ALT) & substr(bedpe$ALT,1,1) != "]"] <- "+"
-  strand2[grepl(']', bedpe$ALT) & substr(bedpe$ALT,1,1) != "]"] <- "+"
-
-  ###]p]t
-  strand1[grepl(']', bedpe$ALT) & substr(bedpe$ALT,1,1) == "]"] <- "-"
-  strand2[grepl(']', bedpe$ALT) & substr(bedpe$ALT,1,1) == "]"] <- "+"
-
-
   SVTYPE <- bedpe$INFO_SVTYPE
-  SVTYPE[(strand1 == "+") & (strand2 == "-") & (bedpe$chrom1 == bedpe$chrom2)] <- "DEL"
-  SVTYPE[(strand1 == "-") & (strand2 == "+") & (bedpe$chrom1 == bedpe$chrom2)] <- "DUP"
+  SVTYPE[(bedpe$strand1 == "+") & (bedpe$strand2 == "-") & (bedpe$chrom1 == bedpe$chrom2)] <- "DEL"
+  SVTYPE[(bedpe$strand1 == "-") & (bedpe$strand2 == "+") & (bedpe$chrom1 == bedpe$chrom2)] <- "DUP"
 
-  SVTYPE[(strand1 == strand2) & (bedpe$chrom1 == bedpe$chrom2)] <- "INV"
-  #SVTYPE[(strand1 == strand2) & (bedpe$chrom1 != bedpe$chrom2)] <- "TRA_INV"
-  #SVTYPE[(strand1 != strand2) & (bedpe$chrom1 != bedpe$chrom2)] <- "TRA"
+  SVTYPE[(bedpe$strand1 == bedpe$strand2) & (bedpe$chrom1 == bedpe$chrom2)] <- "INV"
   SVTYPE[(bedpe$chrom1 != bedpe$chrom2)] <- "TRA"
-  SVTYPE[is.na(strand1)] <- "INS"
+  SVTYPE[is.na(bedpe$strand1)] <- "INS"
 
   standard_bedpe <- data.frame(chrom1 = as.character(bedpe$chrom1),
                                pos1 = as.integer(bedpe$pos1),
                                chrom2 = as.character(bedpe$chrom2),
                                pos2 = as.integer(bedpe$pos2),
                                SVTYPE = SVTYPE,
-                               #strand1 = strand1,
-                               #strand2 = strand2,
+                               strand1 = bedpe$strand1,
+                               strand2 = bedpe$strand2,
                                ID = paste0(caller_name,"_",SV_index,"_1_",event_index),
                                ID_mate = paste0(caller_name,"_",SV_index,"_2_",event_index),
-                               ALT = bedpe$ALT,
+                               #ALT = bedpe$ALT,
                                stringsAsFactors = FALSE)
 
-  bedpe_SVTYPE_classified <- data.frame(standard_bedpe, bedpe[,!(colnames(bedpe) %in% c("chrom1","chrom2","pos1","pos2","ALT"))])
+  bedpe_SVTYPE_classified <- data.frame(standard_bedpe, bedpe[,!(colnames(bedpe) %in% c("chrom1","chrom2","pos1","pos2"))])
   colnames(bedpe_SVTYPE_classified) <- c("chrom1", "pos1","chrom2","pos2","SVTYPE",
-                                         # "strand1","strand2",
-                                         "ID","ID_mate","ALT",
-                                         colnames(bedpe)[!(colnames(bedpe) %in% c("chrom1","chrom2","pos1","pos2","ALT"))])
+                                         "strand1","strand2",
+                                         "ID","ID_mate",
+                                         colnames(bedpe)[!(colnames(bedpe) %in% c("chrom1","chrom2","pos1","pos2"))])
   return(bedpe_SVTYPE_classified)
 }
-

@@ -10,3 +10,5 @@ ShinySoSV_newdata <- data.frame(sampleID = paste0("sample_",c(1:100)),
                       T_coverage = round(rnorm(100, mean=60, sd=10),digits = 2),
                       BND_threshold = 100)
 usethis::use_data(ShinySoSV_newdata,overwrite = TRUE)
+
+
