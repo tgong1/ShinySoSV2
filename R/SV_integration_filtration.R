@@ -86,10 +86,10 @@ simple_SVTYPE_classification <- function(bed, caller_name){
                                #ALT = bedpe$ALT,
                                stringsAsFactors = FALSE)
 
-  bedpe_SVTYPE_classified <- data.frame(standard_bedpe, bedpe[,!(colnames(bedpe) %in% c("chrom1","chrom2","pos1","pos2"))])
+  bedpe_SVTYPE_classified <- data.frame(standard_bedpe, bedpe[,!(colnames(bedpe) %in% c("chrom1","chrom2","pos1","pos2","strand1","strand2"))])
   colnames(bedpe_SVTYPE_classified) <- c("chrom1", "pos1","chrom2","pos2","SVTYPE",
                                          "strand1","strand2",
                                          "ID","ID_mate",
-                                         colnames(bedpe)[!(colnames(bedpe) %in% c("chrom1","chrom2","pos1","pos2"))])
+                                         colnames(bedpe)[!(colnames(bedpe) %in% c("chrom1","chrom2","pos1","pos2","strand1","strand2"))])
   return(bedpe_SVTYPE_classified)
 }
