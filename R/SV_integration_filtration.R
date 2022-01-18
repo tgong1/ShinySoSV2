@@ -112,7 +112,8 @@ SV_integration <- function(sampleID, SVCaller_name, SVCaller_bed_name,bkpt_T_cal
   dir.create(sub_directory)
   SVTYPE_ignore_text <- ifelse(SVTYPE_ignore, "SVTYPE_ignore", "SVTYPE_same")
   SVCaller_bed_union <- SVCaller_union_intersect_generate(sampleID, SVCaller_name, SVCaller_bed_name, BND_diff, bkpt_T_callers, SVTYPE_ignore, bedtools_dir)
-
+  index <- which(colnames(SVCaller_bed_union) %in% SVCaller_name)
+  SVCaller_bed_union <- SVCaller_bed_union[,c(1:9, index)]
   write.table(SVCaller_bed_union,
               file = paste0(directory,"/",sub_directory,"/",
                             sampleID, "_", paste0(SVCaller_name,collapse = "_"),
