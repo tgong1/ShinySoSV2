@@ -12,3 +12,11 @@ ShinySoSV_newdata <- data.frame(sampleID = paste0("sample_",c(1:100)),
 usethis::use_data(ShinySoSV_newdata,overwrite = TRUE)
 
 
+vcf_file <- system.file("extdata",
+                        "GRIDSS_SVEngine_TumorSV2.60x_NormalSV1.60x_0.5_somatic_PASS_annotated.vcf",
+                        package = "ShinySoSV2")
+bed <- vcf_to_bed(vcf_file)
+bed_test <- data.frame(CHROM = bed$CHROM,
+                       POS = bed$POS,
+                       ALT = bed$ALT)
+usethis::use_data(bed_test,overwrite = TRUE)
