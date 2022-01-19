@@ -120,7 +120,3 @@ bedpe <- read.table(system.file("extdata",
 SV_bed <- bedpe[,c(1:10)]
 usethis::use_data(SV_bed, overwrite = TRUE)
 
-
-
-
-

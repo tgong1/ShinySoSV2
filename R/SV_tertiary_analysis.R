@@ -118,3 +118,87 @@ Spectrum_SV_type <- function(input_SV_count, threshold_total, threshold_relative
   hyper_SV <- df2[df2$relative_freq > threshold_relative_freq & df2$N_total > threshold_total,]
   return(hyper_SV)
 }
+
+#' SV breakpoints gene annotation
+#'
+#' This function annotate SV breakpoints based on gene regions
+#'
+#' @param input_df_name name of input data frame
+#' @param gene_bed data frame of gene regions
+#' @param bedtools_dir bedtools for use
+#' @return data frame of SV set
+#' @export
+SV_breakpoint_gene_annotation <- function(input_df_name, gene_bed, bedtools_dir){
+  directory <- "./"
+  sub_directory <- paste0("./tmp/")
+  dir.create(sub_directory)
+
+  gene_file <- paste0(sub_directory,"gene","_tmp.bed")
+  write.table(gene_bed, gene_file, quote=FALSE, sep='\t', row.names=FALSE, col.names=TRUE)
+  bedpe <- eval(parse(text = input_df_name))
+  if(nrow(bedpe) !=0){
+    bedpe$chrom1 <- as.character(bedpe$chrom1)
+    bedpe$chrom2 <- as.character(bedpe$chrom2)
+    bedpe$ID <- as.character(bedpe$ID)
+    bedpe$ID_mate <- as.character(bedpe$ID_mate)
+
+    SV_bed <- data.frame(chrom = c(bedpe$chrom1, bedpe$chrom2),
+                         start = c(bedpe$pos1-1, bedpe$pos2-1),
+                         end = c(bedpe$pos1, bedpe$pos2),
+                         SVTYPE = c(bedpe$SVTYPE, bedpe$SVTYPE),
+                         ID = c(bedpe$ID, bedpe$ID_mate))
+
+    write.table(SV_bed, paste0(sub_directory,"SV_tmp.bed"), quote=FALSE, sep='\t', row.names=FALSE, col.names=FALSE)
+
+    intersect_file <- paste0(directory,"SV_gene","_intersect.bed")
+    system(paste(bedtools_dir,"intersect -a", paste0(sub_directory,"SV_tmp.bed"),
+                 "-b", gene_file,
+                 "-wao >", intersect_file))
+    intersect <- read.table(intersect_file,header = FALSE, sep="\t",stringsAsFactors=FALSE, quote="")
+    colnames(intersect) <- c("SV_chrom", "SV_start","SV_end","SVTYPE", "SV_ID",
+                             colnames(gene_bed),"overlap")
+  }else{
+    intersect <- c()
+  }
+  return(intersect)
+}
+
+#' SV breakpoints gene annotation on input bed format
+#'
+#' This function annotate SV breakpoints based on gene regions
+#'
+#' @param input_df_name name of input data frame
+#' @param gene_bed data frame of gene regions
+#' @param bedtools_dir bedtools for use
+#' @return data frame of SV set
+#' @export
+SV_bedpe_gene_annotation <- function(input_df_name, gene_bed, bedtools_dir){
+  bedpe <- eval(parse(text = input_df_name))
+  bedpe_bkpt_geneAnnotated <- SV_breakpoint_gene_annotation(input_df_name, gene_bed,  bedtools_dir)
+
+  bedpe_bkpt_geneAnnotated <- bedpe_bkpt_geneAnnotated[bedpe_bkpt_geneAnnotated$type == "gene" & bedpe_bkpt_geneAnnotated$gene_biotype == "protein_coding",]
+  if(nrow(bedpe) !=0){
+    bedpe_geneAnnotated <- c()
+    for(j in c(1:nrow(bedpe))){
+      tmp1 <- bedpe_bkpt_geneAnnotated[which(match(bedpe_bkpt_geneAnnotated$SV_ID, bedpe$ID) == j),]
+      #if(nrow(tmp1) == 0){pos1_overlap_gene <- NA}else{pos1_overlap_gene = paste(tmp1$gene_name, collapse= ",")}
+
+      if(nrow(tmp1) == 0){pos1_overlap_gene <- NA}else{pos1_overlap_gene = tmp1$gene_name}
+      tmp3 <- cbind(bedpe[j,], pos1_overlap_gene)
+
+      tmp2 <- bedpe_bkpt_geneAnnotated[which(match(bedpe_bkpt_geneAnnotated$SV_ID, bedpe$ID_mate) == j),]
+      #if(nrow(tmp2) == 0){pos2_overlap_gene <- NA}else{pos2_overlap_gene = paste(tmp2$gene_name, collapse= ",")}
+
+      if(nrow(tmp2) == 0){pos2_overlap_gene <- NA}else{pos2_overlap_gene = tmp2$gene_name}
+      if(length(pos2_overlap_gene)>1){
+        tmp4 <- cbind(sapply(tmp3,rep.int,times=length(pos2_overlap_gene)), pos2_overlap_gene = rep(pos2_overlap_gene, each = nrow(tmp3)))
+      }else{
+        tmp4 <- cbind(tmp3, pos2_overlap_gene)
+      }
+      bedpe_geneAnnotated <- rbind(bedpe_geneAnnotated, tmp4)
+    }
+  }else{
+    bedpe_geneAnnotated <- c()
+  }
+  return(bedpe_geneAnnotated)
+}

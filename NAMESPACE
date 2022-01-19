@@ -2,6 +2,8 @@
 
 export(SVCaller_union_intersect_generate)
 export(SVTYPE_stat_generate)
+export(SV_bedpe_gene_annotation)
+export(SV_breakpoint_gene_annotation)
 export(SV_integration)
 export(ShinySoSV_prediction)
 export(Spectrum_SV_type)
