@@ -42,7 +42,7 @@ vcf_file <- system.file("extdata",
 CallerC_bed <- simple_SVTYPE_classification(bed = vcf_to_bed(vcf_file), "CallerC")
 usethis::use_data(CallerC_bed,overwrite = TRUE)
 
-###Test data for
+###Test data for Sv type composition
 generateRandomPos <- function(n,chr,chr.sizes,width,strand){
   random_chr <- sample(x=chr,size=n,prob=chr.sizes,replace=T)
   random_pos <- sapply(random_chr,function(chrTmp){sample(chr.sizes[chr==chrTmp],1)})
@@ -53,11 +53,11 @@ generateRandomPos <- function(n,chr,chr.sizes,width,strand){
 All_sampleID <- paste0("sample_",c(1:100))
 set.seed(1)
 input_SV_count <- data.frame(sampleID = All_sampleID,
-                             DEL = abs(round(rnorm(100, mean=0, sd=200),digits = 0)),
-                             DUP = abs(round(rnorm(100, mean=0, sd=200),digits = 0)),
-                             INS = abs(round(rnorm(100, mean=0, sd=200),digits = 0)),
-                             INV = abs(round(rnorm(100, mean=0, sd=200),digits = 0)),
-                             TRA = abs(round(rnorm(100, mean=0, sd=200),digits = 0)))
+                             DEL = sample.int(300, 100, replace = TRUE),
+                             DUP = sample.int(300, 100, replace = TRUE),
+                             INS = sample.int(100, 100, replace = TRUE),
+                             INV = sample.int(300, 100, replace = TRUE),
+                             TRA = sample.int(300, 100, replace = TRUE))
 for(i in c(1: nrow(input_SV_count))){
   sample_tmp_bed <- c()
   for(SVTYPE in colnames(input_SV_count)[2:ncol(input_SV_count)]){
@@ -98,6 +98,13 @@ for(i in c(1: nrow(input_SV_count))){
 save(list = paste0(All_sampleID, "_df"), file = "./input_SV_bed.RData")
 
 
-
+set.seed(1)
+input_SV_count <- data.frame(sampleID = paste0("sample_",c(1:100)),
+                             DEL = sample.int(300, 100, replace = TRUE),
+                             DUP = sample.int(300, 100, replace = TRUE),
+                             INS = sample.int(100, 100, replace = TRUE),
+                             INV = sample.int(300, 100, replace = TRUE),
+                             TRA = sample.int(300, 100, replace = TRUE))
+save(input_SV_count, file = "./input_SV_count.Rdata")
 
 
