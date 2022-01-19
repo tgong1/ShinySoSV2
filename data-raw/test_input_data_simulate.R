@@ -96,7 +96,7 @@ for(i in c(1: nrow(input_SV_count))){
   assign(paste0(All_sampleID[i], "_df"), df[!(df$SVTYPE == "TRA" & (df$chrom1 == df$chrom2)),])
 }
 
-usethis::use_data(df,overwrite = TRUE)
+save(list = paste0(All_sampleID, "_df"), file = "./input_SV_bed.Rdata")
 
 
 
