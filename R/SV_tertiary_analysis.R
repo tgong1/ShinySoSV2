@@ -58,6 +58,22 @@ Summary_SV_type <- function(All_sampleID, All_input_df_name){
 #' @return data frame of hyper SV
 #' @export
 Spectrum_SV_type <- function(input_SV_count, threshold_total, threshold_relative_freq){
+  theme1 <-  ggplot2::theme(axis.text=ggplot2::element_text(size=12,face="bold"),
+                            axis.title=ggplot2::element_text(size=14,face="bold"),
+                            axis.text.x = ggplot2::element_text(angle = 90, hjust = 1, size = 8),
+                            plot.title = ggplot2::element_text(size=14),
+                            legend.text = ggplot2::element_text(size=12,face="bold"),
+                            #legend.title = element_text(size=12,face="bold"),
+                            legend.title = ggplot2::element_blank(),
+                            legend.position="top")
+
+  theme2 <-  ggplot2::theme(axis.text = ggplot2::element_text(size=12,face="bold"),
+                            axis.title=ggplot2::element_text(size=14,face="bold"),
+                            plot.title = ggplot2::element_text(size=14),
+                            legend.text = ggplot2::element_text(size=12,face="bold"),
+                            #legend.title = element_text(size=12,face="bold"),
+                            legend.title = ggplot2::element_blank(),
+                            legend.position="top")
   df <- data.frame(SVTYPE = rep(colnames(input_SV_count)[2:ncol(input_SV_count)], each = nrow(input_SV_count)),
                    sampleID = rep(input_SV_count$sampleID, (ncol(input_SV_count)-1)),
                    Count = as.vector(unlist(input_SV_count[,2:ncol(input_SV_count)])))
