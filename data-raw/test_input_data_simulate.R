@@ -107,4 +107,20 @@ input_SV_count <- data.frame(sampleID = paste0("sample_",c(1:100)),
                              TRA = sample.int(300, 100, replace = TRUE))
 usethis::use_data(input_SV_count, overwrite = TRUE)
 
+###Test data for CNV integration, currently use sample UP2003 in HRPCa project
+SCNV <- read.table(system.file("extdata",
+            "UP2003-T.final.call.threshold.cns",
+            package = "ShinySoSV2"), header = TRUE)
+CNV_bed <- SCNV[,c(1,2,3,6)]
+usethis::use_data(CNV_bed, overwrite = TRUE)
+
+bedpe <- read.table(system.file("extdata",
+                               "UP2003_Manta_GRIDSS_intersect_both_high_confidence.bedpe",
+                               package = "ShinySoSV2"), header = TRUE)
+SV_bed <- bedpe[,c(1:10)]
+usethis::use_data(SV_bed, overwrite = TRUE)
+
+
+
+
 
