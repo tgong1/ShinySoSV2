@@ -94,7 +94,6 @@ for(i in c(1: nrow(input_SV_count))){
                    SVLEN = random_sample.bed$SVLEN[1:(n_total_tmp-n_TRA)],
                    strand = random_sample.bed$strand1[1:(n_total_tmp-n_TRA)])
   assign(paste0(All_sampleID[i], "_df"), df[!(df$SVTYPE == "TRA" & (df$chrom1 == df$chrom2)),])
-
 }
 save(list = paste0(All_sampleID, "_df"), file = "./input_SV_bed.RData")
 
