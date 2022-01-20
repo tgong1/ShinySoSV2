@@ -119,6 +119,50 @@ Spectrum_SV_type <- function(input_SV_count, threshold_total, threshold_relative
   return(hyper_SV)
 }
 
+#' Integrate SV and CNV
+#'
+#' This function integrate deletion and duplication with copy number segments
+#'
+#' @param sampleID name of sample
+#' @param SV_bed data frame of SV
+#' @param CNV_bed data frame of CNV segment
+#' @param bedtools_dir bedtools for use
+#' @param overlap_f the fraction of minimum overlap required of CNV segment as a fraction of SV
+#' @return data frame of SV set
+#' @export
+SV_CNV_integration <- function(sampleID, SV_bed, CNV_bed, bedtools_dir, overlap_f){
+  directory <- "./"
+  sub_directory <- paste0("./tmp/")
+  dir.create(sub_directory)
+
+  assign(paste0(sampleID, "_CNV_tmp.bed"), data.frame(chrom = CNV_bed$chrom,
+                                                      start = CNV_bed$start,
+                                                      end = CNV_bed$end,
+                                                      cn = CNV_bed$cn))
+  write.table(eval(parse(text=paste0(sampleID, "_CNV_tmp.bed"))), paste0(sub_directory,sampleID,"_CNV_tmp.bed"), quote=FALSE, sep='\t', row.names=FALSE, col.names=FALSE)
+  assign(paste0(sampleID,"_SV_tmp.bed"), data.frame(chrom = SV_bed[SV_bed$SVTYPE %in% c("DEL","DUP"),]$chrom1,
+                                                    start = SV_bed[SV_bed$SVTYPE %in% c("DEL","DUP"),]$pos1,
+                                                    end = SV_bed[SV_bed$SVTYPE %in% c("DEL","DUP"),]$pos2,
+                                                    ID = SV_bed[SV_bed$SVTYPE %in% c("DEL","DUP"),]$ID,
+                                                    SVTYPE = SV_bed[SV_bed$SVTYPE %in% c("DEL","DUP"),]$SVTYPE))
+
+  write.table(eval(parse(text=paste0(sampleID,"_SV_tmp.bed"))), paste0(sub_directory,sampleID,"_SV_tmp.bed"), quote=FALSE, sep='\t', row.names=FALSE, col.names=FALSE)
+
+  intersect_file <- paste0(sampleID, "_", "SV_CNV","_intersect.bed")
+  system(paste(bedtools_dir,"intersect -a", paste0(sub_directory,sampleID,"_SV_tmp.bed"),
+               "-b", paste0(sub_directory,sampleID,"_CNV_tmp.bed"),
+               "-f", overlap_f,"-r", "-wo >", intersect_file))
+
+  if(file.info(intersect_file)$size != 0){
+    intersect <- read.table(intersect_file,header = FALSE, sep="\t",stringsAsFactors=FALSE, quote="")
+    colnames(intersect) <- c("SV_chrom", "SV_start","SV_end","SV_ID","SV_type",
+                             "CNV_chrom", "CNV_start","CNV_end","CNV_cn","overlap")
+    df_SV_CNV <- cbind(sampleID = sampleID, intersect)
+  }
+  return(df_SV_CNV)
+}
+
+
 #' SV breakpoints gene annotation
 #'
 #' This function annotate SV breakpoints based on gene regions
