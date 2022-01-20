@@ -202,3 +202,167 @@ SV_bedpe_gene_annotation <- function(input_df_name, gene_bed, bedtools_dir){
   }
   return(bedpe_geneAnnotated)
 }
+
+#' SV breakpoints summary for all samples
+#'
+#' This function put all sample SV breakpoints together
+#'
+#' @param All_sampleID sample ID for all samples
+#' @param All_input_df_name names of all bed in df
+#' @return data frame of SV set
+#' @export
+Summary_SV_breakpoint <- function(All_sampleID, All_input_df_name){
+  df_breakpoints <- c()
+  for(i in c(1 : length(All_sampleID))){
+    sampleID <- All_sampleID[i]
+    bedpe <- eval(parse(text = All_input_df_name[i]))
+    if(nrow(bedpe) != 0){
+      df_breakpoints <- rbind(df_breakpoints,
+                              data.frame(sampleID = sampleID,
+                                        chrom = c(as.character(bedpe$chrom1), as.character(bedpe$chrom2)),
+                                         pos = c(bedpe$pos1, bedpe$pos2),
+                                          ID = c(bedpe$ID, bedpe$ID_mate)))
+    }
+
+  }
+  return(df_breakpoints)
+}
+
+#' Genomic bins
+#'
+#' Put SV breakpoint into bins
+#'
+#' @param df_breakpoints data frame of SV breakpoints
+#' @return data frame of SV set
+#' @export
+Spectrum_SV_bin <- function(df_breakpoints){
+  df_bin_all <- c()
+  for(chrom in c("chr1","chr2","chr3","chr4","chr5","chr6","chr7","chr8","chr9","chr10","chr11","chr12",
+                 "chr13","chr14","chr15","chr16","chr17","chr18","chr19","chr20","chr21","chr22","chrX")){
+    df2 <- df_breakpoints[df_breakpoints$chrom %in% chrom,]
+    # breaks = seq(0,250e6,1e5)
+    breaks = seq(0, 250e6, 1e6)
+    bin_labels <- cut(df2$pos, breaks=breaks, labels=c(1:(length(breaks)-1)))
+    bin <- cut(df2$pos, breaks=breaks)
+    df_bin <- cbind(bin_labels,bin, breaks = breaks[bin_labels],df2)
+    #df_bin <- cbind(df2, bin_labels, bin, breaks = breaks[bin_labels])
+    bin_table1 <- data.frame(table(df_bin$bin_labels))
+
+    df_sample <- df_bin[!(duplicated(paste0(df_bin$sampleID,"_", df_bin$bin_labels))),]
+    bin_table2 <- data.frame(table(df_sample$bin_labels))
+
+    df_bin <- cbind(df_bin,
+                    count_breakpoints = bin_table1[df_bin$bin_labels,]$Freq,
+                    count_sample = bin_table2[df_bin$bin_labels,]$Freq)
+    df_bin_all <- rbind(df_bin_all,df_bin)
+  }
+
+  df_bin_all <- data.frame(chrom_bin_labels = paste0(df_bin_all$chrom,"_", df_bin_all$bin_labels), df_bin_all)
+  return(df_bin_all)
+}
+
+#' Genomic bins hotspots
+#'
+#' Define hotspots
+#'
+#' @param df_breakpoints data frame of SV breakpoints
+#' @param  threshold_count_breakpoint threshold of number of SD
+#' @param  threshold_count_sample threshold of number of samples
+#' @return data frame of SV set
+#' @export
+Spectrum_SV_bin_define_hotspot <- function(df_breakpoints, threshold_count_breakpoint, threshold_count_sample){
+  df_bin_all <- Spectrum_SV_bin(df_breakpoints)
+  #head(df_bin_all)
+  ##### add HOTSPOT information
+  df2 <- df_bin_all
+  df3 <- df2
+  df3 <- df3[!duplicated(df3$chrom_bin_labels),]
+  SV_hotspots <- rbind(df3[df3$count_breakpoints>mean(df3$count_breakpoints)+threshold_count_breakpoint*sd(df3$count_breakpoints),],
+                       df3[df3$count_sample>mean(df3$count_sample)+threshold_count_sample*sd(df3$count_sample),])
+
+  hotspots <- unique(SV_hotspots$chrom_bin_labels)
+  df_bin_all_hotspot <- data.frame(df_bin_all,
+                                   is_hotspot_breakpoint = df_bin_all$chrom_bin_labels %in% df3[df3$count_breakpoints>mean(df3$count_breakpoints)+threshold_count_breakpoint*sd(df3$count_breakpoints),]$chrom_bin_labels,
+                                   is_hotspot_sample = df_bin_all$chrom_bin_labels %in% df3[df3$count_sample>mean(df3$count_sample)+threshold_count_sample*sd(df3$count_sample),]$chrom_bin_labels,
+                                   is_hotspot = df_bin_all$chrom_bin_labels %in% hotspots)
+  return(df_bin_all_hotspot)
+}
+
+#' Plot genomic bins hotspots
+#'
+#' Plot hotspots
+#'
+#' @param df_bin_all_hotspots data frame of SV breakpoints bins with hotspots defined
+#' @return data frame of SV set
+#' @export
+plot_ideograms <- function(df_bin_all_hotspots){
+  df2 <- df_bin_all_hotspots
+  df2$chrom <- factor(df2$chrom, levels = c("chr1","chr2","chr3","chr4","chr5","chr6","chr7","chr8","chr9","chr10","chr11","chr12",
+                                            "chr13","chr14","chr15","chr16","chr17","chr18","chr19","chr20","chr21","chr22","chrX"))
+  is_hotspot <- c(FALSE, TRUE)
+
+  col_all <- RColorBrewer::brewer.pal(8, "Dark2")[c(8,1)]
+  cex_all <- c(1,2)
+
+  chrom_all <- c("chr1","chr2","chr3","chr4","chr5","chr6","chr7","chr8","chr9","chr10","chr11","chr12",
+                 "chr13","chr14","chr15","chr16","chr17","chr18","chr19","chr20","chr21","chr22","chrX")
+
+  png(file="./SV_breakpoints_ideogram_byBins.png",width=2000,height=550)
+  kp <- karyoploteR::plotKaryotype("hg38", chromosomes = chrom_all, plot.type = 4, cex = 1.5, srt = 30)
+  karyoploteR::kpAddBaseNumbers(kp, tick.dist = 50000000)
+  karyoploteR::kpDataBackground(kp, data.panel = 1)
+
+  for(i in c(1: length(chrom_all))){
+    for(j in c(1,2)){
+      df_tmp <- df2[df2$chrom==chrom_all[i] & df2$is_hotspot_breakpoint == is_hotspot[j],]
+      x <- df_tmp$breaks
+      y <- df_tmp$count_breakpoints/120
+      karyoploteR::kpPoints(kp, chr=chrom_all[i], x=x, y=y, data.panel = 1, col = col_all[j],  cex=cex_all[j])
+    }
+  }
+  karyoploteR::kpAxis(kp, ymin=0, ymax=120,numticks = 3, data.panel = 1, cex = 1.5)
+  dev.off()
+
+  ######## ideogram with sample counts for each chromosome by bins
+  df3 <- df2
+  df3 <- df3[!duplicated(df3$chrom_bin_labels),]
+  chrom_all <- c("chr1","chr2","chr3","chr4","chr5","chr6","chr7","chr8","chr9","chr10","chr11","chr12",
+                 "chr13","chr14","chr15","chr16","chr17","chr18","chr19","chr20","chr21","chr22","chrX")
+
+  png(file="./SV_samples_ideogram_byBins.png",width=2000,height=500)
+  kp <- karyoploteR::plotKaryotype("hg38", chromosomes = chrom_all, plot.type = 4, cex = 1.5, srt = 30)
+  #kpAddBaseNumbers(kp)
+  karyoploteR::kpAddBaseNumbers(kp, tick.dist = 50000000)
+  karyoploteR::kpDataBackground(kp, data.panel = 2)
+
+  for(i in c(1: length(chrom_all))){
+    for(j in c(1,2)){
+      df_tmp <- df3[df3$chrom==chrom_all[i] & df3$is_hotspot_sample == is_hotspot[j],]
+      #x <- df_tmp$pos
+      x <- df_tmp$breaks
+      y <- df_tmp$count_sample/50
+      karyoploteR::kpPoints(kp, chr=chrom_all[i], x=x, y=y, data.panel = 2, col = col_all[j], cex=cex_all[j])
+    }
+  }
+  karyoploteR::kpAxis(kp, ymin=0, ymax=50,numticks = 3, data.panel = 2, cex = 1.5)
+  dev.off()
+}
+
+#' Genomic bins hotspots
+#'
+#' Define hotspots
+#'
+#' @param All_sampleID sample ID for all samples
+#' @param All_input_df_name names of all bed in df
+#' @param  threshold_count_breakpoint threshold of number of SD
+#' @param  threshold_count_sample threshold of number of samples
+#' @return data frame of genomic bins with hotspots defined
+#' @export
+Spectrum_SV_bin_generate <- function(All_sampleID, All_input_df_name, threshold_count_breakpoint,threshold_count_sample){
+  df_breakpoints <- Summary_SV_breakpoint(All_sampleID, All_input_df_name) ### put all bed df together
+  df_bin_all <- Spectrum_SV_bin(df_breakpoints) ### generate genomic bins
+  df_bin_all_hotspots <- Spectrum_SV_bin_define_hotspot(df_breakpoints, threshold_count_breakpoint,threshold_count_sample) ##### define genomic bins and add HOTSPOT information
+  write.table(df_bin_all_hotspots,"./df_bin_all_hotspots.txt", quote=FALSE, sep='\t', row.names=FALSE, col.names=TRUE)
+  plot_ideograms(df_bin_all_hotspots) ### SV hotspot visualisation
+  return(df_bin_all_hotspots)
+}
