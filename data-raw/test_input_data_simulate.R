@@ -127,6 +127,10 @@ usethis::use_data(SV_bed, overwrite = TRUE)
 #CallerA_bed_GeneAnnotated <- SV_bedpe_gene_annotation(input_df_name = "CallerA_bed", gene_bed, bedtools_dir)
 #usethis::use_data(CallerA_bed_GeneAnnotated, overwrite = TRUE)
 
-df_All_gene_fusions_ensembl <- read.csv("/Users/tingtinggong/Desktop/work_at_home/HYPER-DUP/SomaticSV_MantaGRIDSS/All_gene_fusions.csv")
-usethis::use_data(df_All_gene_fusions_ensembl, overwrite = TRUE)
+df_All_gene_fusions <- read.csv("/Users/tingtinggong/Desktop/work_at_home/HYPER-DUP/SomaticSV_MantaGRIDSS/All_gene_fusions.csv")
+df_All_gene_fusions <- df_All_gene_fusions[!(df_All_gene_fusions$sampleID %in% c("16599-1159140", "10651-1042378","UP2063","UP2037","UP2041")),]
+df_All_gene_fusions$sampleID<- gsub('-.*','',as.character(df_All_gene_fusions$sampleID))
+df_All_gene_fusions$SVTYPE[df_All_gene_fusions$SVTYPE=="TRA_INV"] <- "TRA"
+ProstateCancer_SV_bed_GeneAnnotated <- df_All_gene_fusions[,c(1:11,18,19)]
+usethis::use_data(ProstateCancer_SV_bed_GeneAnnotated, overwrite = TRUE)
 
