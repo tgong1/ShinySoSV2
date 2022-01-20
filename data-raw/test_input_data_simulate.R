@@ -120,3 +120,10 @@ bedpe <- read.table(system.file("extdata",
 SV_bed <- bedpe[,c(1:10)]
 usethis::use_data(SV_bed, overwrite = TRUE)
 
+
+#data(CallerA_bed)
+#load(system.file("extdata", "gene_bed.Rdata", package = "ShinySoSV2"))
+#bedtools_dir = "/opt/homebrew/bin/bedtools"
+#CallerA_bed_GeneAnnotated <- SV_bedpe_gene_annotation(input_df_name = "CallerA_bed", gene_bed, bedtools_dir)
+#usethis::use_data(CallerA_bed_GeneAnnotated, overwrite = TRUE)
+
