@@ -127,3 +127,6 @@ usethis::use_data(SV_bed, overwrite = TRUE)
 #CallerA_bed_GeneAnnotated <- SV_bedpe_gene_annotation(input_df_name = "CallerA_bed", gene_bed, bedtools_dir)
 #usethis::use_data(CallerA_bed_GeneAnnotated, overwrite = TRUE)
 
+df_All_gene_fusions_ensembl <- read.csv("/Users/tingtinggong/Desktop/work_at_home/HYPER-DUP/SomaticSV_MantaGRIDSS/All_gene_fusions.csv")
+usethis::use_data(df_All_gene_fusions_ensembl, overwrite = TRUE)
+
